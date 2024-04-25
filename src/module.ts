@@ -1,7 +1,7 @@
 import { defineNuxtModule, addPlugin, createResolver, useLogger, isNuxt3, addVitePlugin, addServerPlugin } from '@nuxt/kit'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 
-const MODULE_NAME = '@sola-nyan/nuxt-sentry'
+const MODULE_NAME = '@solanyan/nuxt-sentry'
 
 const logger = useLogger(`module:${MODULE_NAME}`)
 
@@ -27,14 +27,15 @@ export interface ModuleOptions {
   server?: {
     enable: boolean
     debug?: boolean
-    nodeProfilingIntegration?: {
-      enable: boolean
-      tracesSampleRate?: number
-      profilesSampleRate?: number
-    }
+    // nodeProfilingIntegration?: {
+    //   enable: boolean
+    //   tracesSampleRate?: number
+    //   profilesSampleRate?: number
+    // }
   }
   sourceMap?: {
     enable: boolean
+    debug?: boolean
     filesToDeleteAfterUpload?: string[]
     telemetryOmit?: boolean
   }
@@ -70,14 +71,15 @@ export default defineNuxtModule<ModuleOptions>({
     server: {
       enable: true,
       debug: false,
-      nodeProfilingIntegration: {
-        enable: true,
-        tracesSampleRate: 1.0,
-        profilesSampleRate: 0.1,
-      },
+      // nodeProfilingIntegration: {
+      //   enable: true,
+      //   tracesSampleRate: 1.0,
+      //   profilesSampleRate: 0.1,
+      // },
     },
     sourceMap: {
       enable: true,
+      debug: false,
       filesToDeleteAfterUpload: ['.output/**/*.map'],
       telemetryOmit: true,
     },
@@ -131,6 +133,8 @@ export default defineNuxtModule<ModuleOptions>({
 
     // Add sourcemap upload plugin with Vite
     if (modOption.sourceMap?.enable) {
+      // Vite reconfig
+
       // Force generate client sourcemap
       _nuxt.options.sourcemap.client = true
       // Install plugin
@@ -139,6 +143,7 @@ export default defineNuxtModule<ModuleOptions>({
         org: process.env.SENTRY_ORG,
         project: process.env.SENTRY_PROJECT,
         telemetry: !modOption.sourceMap?.telemetryOmit,
+        debug: modOption.sourceMap?.debug,
         sourcemaps: {
           filesToDeleteAfterUpload: modOption.sourceMap?.filesToDeleteAfterUpload,
         },

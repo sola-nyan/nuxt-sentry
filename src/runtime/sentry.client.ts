@@ -14,7 +14,9 @@ export default defineNuxtPlugin({
     // Create Sentry Init Config
     const sentryIntegrations = []
     const sentryConfig: SentryConfig = {
+      app: _nuxtApp.vueApp,
       dsn: modOption.dsn,
+      debug: modOption.server.debug,
     }
 
     // Config - BrowserTracingIntegration
@@ -40,15 +42,11 @@ export default defineNuxtPlugin({
     }
 
     // Init Client Sentry
-    const cfg: SentryConfig = {
-      integrations: sentryIntegrations,
-      debug: modOption.server.debug,
-    }
-    const mergedCfg = Object.assign(sentryConfig, cfg)
-    console.log(mergedCfg)
-    init(mergedCfg)
+    const cfg: SentryConfig = { integrations: sentryIntegrations }
+    Object.assign(sentryConfig, cfg)
+    init(sentryConfig)
 
-    // App layor Error Caputure
+    // App layer Error Caputure
     _nuxtApp.vueApp.config.errorHandler = (err, context) => {
       // Ignore errors specific HTTP status code
       if (err instanceof H3Error) {
@@ -61,11 +59,14 @@ export default defineNuxtPlugin({
         scope.setExtra('context', context)
         captureException(err)
       })
+
+      console.log('client error')
     }
 
-    // Nuxt layor Error Caputure
+    // Nuxt layer Error Caputure
     _nuxtApp.hook('app:error', (err) => {
       captureException(err)
+      console.log('client error raw')
     })
   },
 })

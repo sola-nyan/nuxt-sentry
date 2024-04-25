@@ -1,4 +1,4 @@
-import { defineNuxtModule, addPlugin, createResolver, useLogger, isNuxt3, addVitePlugin } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, createResolver, useLogger, isNuxt3, addVitePlugin, addServerPlugin } from '@nuxt/kit'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 
 const MODULE_NAME = '@sola-nyan/nuxt-sentry'
@@ -7,7 +7,7 @@ const logger = useLogger(`module:${MODULE_NAME}`)
 
 // Module options TypeScript interface definition
 export interface ModuleOptions {
-  dsn: string
+  dsn: string | undefined
   enable: boolean
   ignoreH3statusCode: number[]
   client: {
@@ -35,8 +35,7 @@ export interface ModuleOptions {
   }
   sourceMap: {
     enable: boolean
-    org: string
-    project: string
+    telemetryOmit: boolean
   }
 }
 
@@ -50,7 +49,7 @@ export default defineNuxtModule<ModuleOptions>({
   },
   // Default configuration options of the Nuxt module
   defaults: {
-    dsn: '',
+    dsn: undefined,
     enable: true,
     ignoreH3statusCode: [404, 202],
     client: {
@@ -78,8 +77,7 @@ export default defineNuxtModule<ModuleOptions>({
     },
     sourceMap: {
       enable: true,
-      org: '',
-      project: '',
+      telemetryOmit: false,
     },
   },
   setup(modOption, _nuxt) {
@@ -91,27 +89,33 @@ export default defineNuxtModule<ModuleOptions>({
 
     // DSN Setting Assert
     if (!modOption.dsn) {
-      logger.warn('Nuxt Sentry DSN(sentry.dsn) is not set, module disabled.')
-      return
+      // Try to get from process.ENV.SENTRY_DSN
+      if (process.env.SENTRY_DSN) {
+        modOption.dsn = process.env.SENTRY_DSN
+      }
+      else {
+        logger.warn('Nuxt Sentry DSN(sentry.dsn) is not set, module disabled.')
+        return
+      }
     }
 
     // Sourcemap Setting Assert
     if (modOption.sourceMap.enable) {
       // SENTRY AUTH TOKEN assert
-      if (!_nuxt.options.runtimeConfig.SENTRY_AUTH_TOKEN) {
+      if (!process.env.SENTRY_AUTH_TOKEN) {
         logger.warn('Environment value of SENTRY_AUTH_TOKEN is not set, module disabled.')
         return
       }
 
       // Org. name
-      if (!modOption.sourceMap.org) {
-        logger.warn('Sentry Organization ID(sentry.sourcemap.org) is not set, module disabled.')
+      if (!process.env.SENTRY_ORG) {
+        logger.warn('Environment value of SENTRY_ORG is not set, module disabled.')
         return
       }
 
       // Project name
-      if (!modOption.sourceMap.org) {
-        logger.warn('Sentry Project ID(sentry.sourcemap.project) is not set, module disabled.')
+      if (!process.env.SENTRY_PROJECT) {
+        logger.warn('Environment value of SENTRY_PROJECT is not set, module disabled.')
         return
       }
     }
@@ -128,7 +132,10 @@ export default defineNuxtModule<ModuleOptions>({
       _nuxt.options.sourcemap.client = true
       // Install plugin
       addVitePlugin(() => sentryVitePlugin({
-        authToken: '',
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        org: process.env.SENTRY_ORG,
+        project: process.env.SENTRY_PROJECT,
+        telemetry: !modOption.sourceMap.telemetryOmit,
         sourcemaps: {
           filesToDeleteAfterUpload: ['.output/**/*.map'],
         },
@@ -147,10 +154,7 @@ export default defineNuxtModule<ModuleOptions>({
     // Setup for server
     if (modOption.client.enable) {
       // Install Plugin
-      addPlugin({
-        src: resolver.resolve('./runtime/sentry.server'),
-        mode: 'server',
-      })
+      addServerPlugin(resolver.resolve('./runtime/sentry.server'))
     }
   },
 })

@@ -1,7 +1,7 @@
 import { browserTracingIntegration, captureException, init, replayIntegration, withScope } from '@sentry/vue'
 import { H3Error } from 'h3'
 import type { ModuleOptions } from '../module'
-import { defineNuxtPlugin, useRuntimeConfig } from '#app'
+import { defineNuxtPlugin, useRouter, useRuntimeConfig } from '#app'
 
 type SentryConfig = Parameters<typeof init>[0]
 
@@ -16,13 +16,16 @@ export default defineNuxtPlugin({
     const sentryConfig: SentryConfig = {
       app: _nuxtApp.vueApp,
       dsn: modOption.dsn,
-      debug: modOption.server.debug,
+      debug: modOption?.server?.debug,
     }
 
+    // Router instance
+
     // Config - BrowserTracingIntegration
-    const btiOpt = modOption.client.browserTracingIntegration
-    if (btiOpt.enable) {
-      sentryIntegrations.push(browserTracingIntegration())
+    const btiOpt = modOption?.client?.browserTracingIntegration
+    if (btiOpt?.enable) {
+      const router = useRouter()
+      sentryIntegrations.push(browserTracingIntegration({ router }))
       const cfg: SentryConfig = {
         tracesSampleRate: btiOpt.tracesSampleRate,
         tracePropagationTargets: btiOpt.tracePropagationTargets,
@@ -31,8 +34,8 @@ export default defineNuxtPlugin({
     }
 
     // Config - ReplayIntegration
-    const riOpt = modOption.client.replayIntegration
-    if (riOpt.enable) {
+    const riOpt = modOption?.client?.replayIntegration
+    if (riOpt?.enable) {
       sentryIntegrations.push(replayIntegration())
       const cfg = {
         replaysSessionSampleRate: riOpt.replaysSessionSampleRate,
@@ -47,26 +50,24 @@ export default defineNuxtPlugin({
     init(sentryConfig)
 
     // App layer Error Caputure
-    _nuxtApp.vueApp.config.errorHandler = (err, context) => {
+    _nuxtApp.vueApp.config.errorHandler = (error, context) => {
       // Ignore errors specific HTTP status code
-      if (err instanceof H3Error) {
-        if (err.statusCode === 404 || err.statusCode === 422)
+      if (error instanceof H3Error) {
+        if (modOption.ignoreH3statusCode?.includes(error.statusCode)) {
           return
+        }
       }
 
       // Report error with context data
       withScope((scope) => {
         scope.setExtra('context', context)
-        captureException(err)
+        captureException(error)
       })
-
-      console.log('client error')
     }
 
     // Nuxt layer Error Caputure
-    _nuxtApp.hook('app:error', (err) => {
-      captureException(err)
-      console.log('client error raw')
+    _nuxtApp.hook('app:error', (error) => {
+      captureException(error)
     })
   },
 })

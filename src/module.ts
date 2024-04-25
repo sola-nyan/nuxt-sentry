@@ -7,35 +7,36 @@ const logger = useLogger(`module:${MODULE_NAME}`)
 
 // Module options TypeScript interface definition
 export interface ModuleOptions {
-  dsn: string | undefined
-  enable: boolean
-  ignoreH3statusCode: number[]
-  client: {
+  dsn?: string
+  enable?: boolean
+  ignoreH3statusCode?: number[]
+  client?: {
     enable: boolean
-    debug: boolean
-    browserTracingIntegration: {
+    debug?: boolean
+    browserTracingIntegration?: {
       enable: boolean
-      tracesSampleRate: number
-      tracePropagationTargets: (RegExp | string)[]
+      tracesSampleRate?: number
+      tracePropagationTargets?: (RegExp | string)[]
     }
-    replayIntegration: {
+    replayIntegration?: {
       enable: boolean
-      replaysSessionSampleRate: number
-      replaysOnErrorSampleRate: number
-    }
-  }
-  server: {
-    enable: boolean
-    debug: boolean
-    nodeProfilingIntegration: {
-      enable: boolean
-      tracesSampleRate: number
-      profilesSampleRate: number
+      replaysSessionSampleRate?: number
+      replaysOnErrorSampleRate?: number
     }
   }
-  sourceMap: {
+  server?: {
     enable: boolean
-    telemetryOmit: boolean
+    debug?: boolean
+    nodeProfilingIntegration?: {
+      enable: boolean
+      tracesSampleRate?: number
+      profilesSampleRate?: number
+    }
+  }
+  sourceMap?: {
+    enable: boolean
+    filesToDeleteAfterUpload?: string[]
+    telemetryOmit?: boolean
   }
 }
 
@@ -49,7 +50,7 @@ export default defineNuxtModule<ModuleOptions>({
   },
   // Default configuration options of the Nuxt module
   defaults: {
-    dsn: undefined,
+    dsn: '',
     enable: true,
     ignoreH3statusCode: [404, 202],
     client: {
@@ -77,7 +78,8 @@ export default defineNuxtModule<ModuleOptions>({
     },
     sourceMap: {
       enable: true,
-      telemetryOmit: false,
+      filesToDeleteAfterUpload: ['.output/**/*.map'],
+      telemetryOmit: true,
     },
   },
   setup(modOption, _nuxt) {
@@ -100,7 +102,7 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     // Sourcemap Setting Assert
-    if (modOption.sourceMap.enable) {
+    if (modOption.sourceMap?.enable) {
       // SENTRY AUTH TOKEN assert
       if (!process.env.SENTRY_AUTH_TOKEN) {
         logger.warn('Environment value of SENTRY_AUTH_TOKEN is not set, module disabled.')
@@ -124,10 +126,11 @@ export default defineNuxtModule<ModuleOptions>({
     const resolver = createResolver(import.meta.url)
 
     // Exposing Options to Runtime
-    _nuxt.options.runtimeConfig.public.sentry = modOption
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    _nuxt.options.runtimeConfig.public.sentry = modOption as any // Need 'as any', Due to Nuxt3 upstream typing "BUG" (https://github.com/nuxt/nuxt/issues/8985)
 
     // Add sourcemap upload plugin with Vite
-    if (modOption.sourceMap.enable) {
+    if (modOption.sourceMap?.enable) {
       // Force generate client sourcemap
       _nuxt.options.sourcemap.client = true
       // Install plugin
@@ -135,15 +138,15 @@ export default defineNuxtModule<ModuleOptions>({
         authToken: process.env.SENTRY_AUTH_TOKEN,
         org: process.env.SENTRY_ORG,
         project: process.env.SENTRY_PROJECT,
-        telemetry: !modOption.sourceMap.telemetryOmit,
+        telemetry: !modOption.sourceMap?.telemetryOmit,
         sourcemaps: {
-          filesToDeleteAfterUpload: ['.output/**/*.map'],
+          filesToDeleteAfterUpload: modOption.sourceMap?.filesToDeleteAfterUpload,
         },
       }))
     }
 
     // Setup for client
-    if (modOption.client.enable) {
+    if (modOption.client?.enable) {
       // Install Plugin
       addPlugin({
         src: resolver.resolve('./runtime/sentry.client'),
@@ -152,7 +155,7 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     // Setup for server
-    if (modOption.client.enable) {
+    if (modOption.client?.enable) {
       // Install Plugin
       addServerPlugin(resolver.resolve('./runtime/sentry.server'))
     }

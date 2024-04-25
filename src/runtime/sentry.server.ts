@@ -5,7 +5,7 @@ import type { NitroApp } from 'nitropack/runtime/app'
 import type { ModuleOptions } from '../module'
 import { useRuntimeConfig } from '#imports'
 
-// Type stub (Nuxt3 upstream bug)
+// Type stub (Due to Nuxt3 upstream BUG seriously https://github.com/nuxt/nuxt/issues/18556)
 type NitroAppPlugin = (nitro: NitroApp) => void
 function defineNitroPlugin(def: NitroAppPlugin): NitroAppPlugin {
   return def
@@ -21,12 +21,12 @@ export default defineNitroPlugin((nitroApp) => {
   const sentryIntegrations = []
   const sentryConfig: SentryConfig = {
     dsn: modOption.dsn,
-    debug: modOption.server.debug,
+    debug: modOption.server?.debug,
   }
 
   // Config - nodeProfilingIntegration
-  const npiOpt = modOption.server.nodeProfilingIntegration
-  if (npiOpt.enable) {
+  const npiOpt = modOption.server?.nodeProfilingIntegration
+  if (npiOpt?.enable) {
     sentryIntegrations.push(nodeProfilingIntegration())
     const cfg: SentryConfig = {
       tracesSampleRate: npiOpt.tracesSampleRate,
@@ -40,11 +40,13 @@ export default defineNitroPlugin((nitroApp) => {
   Object.assign(sentryConfig, cfg)
   init(sentryConfig)
 
-  // App  Error Caputure
+  // App Error Caputure
   nitroApp.hooks.hook('error', (error) => {
+    // Ignore errors specific HTTP status code
     if (error instanceof H3Error) {
-      if (error.statusCode === 404 || error.statusCode === 422)
+      if (modOption.ignoreH3statusCode?.includes(error.statusCode)) {
         return
+      }
     }
     captureException(error)
   })

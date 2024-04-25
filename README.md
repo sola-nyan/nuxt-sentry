@@ -11,5 +11,5 @@ Integrate Sentry to Nuxt3 client/server side.
 Install the module to your Nuxt application with one command:
 
 ```bash
- (developing)
+npm install @solanyan/nuxt-sentry
 ```

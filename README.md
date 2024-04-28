@@ -1,6 +1,7 @@
 # @sola-nyan/nuxt-sentry
 
 Experimental repository.
+DONT USE FOR PUBLIC APPLICATION (Security issues will be fixed in the future)
 
 ## Features
 

@@ -1,4 +1,4 @@
-export default defineEventHandler(() => {
+export default defineEventHandler(async () => {
   return {
     msg: 'success',
   }

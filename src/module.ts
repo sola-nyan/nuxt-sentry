@@ -27,9 +27,8 @@ export interface ModuleOptions {
   server?: {
     enable: boolean
     debug?: boolean
-    detabase: {
-      autoDiscover: boolean
-      prisma: boolean
+    detabase?: {
+      autoDiscover?: boolean
     }
   }
   sourceMap?: {
@@ -72,7 +71,6 @@ export default defineNuxtModule<ModuleOptions>({
       debug: false,
       detabase: {
         autoDiscover: false,
-        prisma: false,
       },
     },
     sourceMap: {

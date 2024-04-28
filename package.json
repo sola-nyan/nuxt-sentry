@@ -1,6 +1,6 @@
 {
   "name": "@solanyan/nuxt-sentry",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Nuxt module for easy integration sentry",
   "repository": "https://github.com/sola-nyan/nuxt-sentry",
   "license": "MIT",

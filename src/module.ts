@@ -8,7 +8,6 @@ const logger = useLogger(`module:${MODULE_NAME}`)
 // Module options TypeScript interface definition
 export interface ModuleOptions {
   dsn?: string
-  enable?: boolean
   ignoreH3statusCode?: number[]
   client?: {
     enable: boolean
@@ -52,7 +51,6 @@ export default defineNuxtModule<ModuleOptions>({
   // Default configuration options of the Nuxt module
   defaults: {
     dsn: '',
-    enable: true,
     ignoreH3statusCode: [404, 202],
     client: {
       enable: true,
@@ -136,7 +134,11 @@ export default defineNuxtModule<ModuleOptions>({
       // Vite reconfig
 
       // Force generate client sourcemap
-      _nuxt.options.sourcemap.client = true
+      if (modOption.client?.enable)
+        _nuxt.options.sourcemap.client = true
+      if (modOption.server?.enable)
+        _nuxt.options.sourcemap.client = true
+
       // Install plugin
       addVitePlugin(() => sentryVitePlugin({
         authToken: process.env.SENTRY_AUTH_TOKEN,

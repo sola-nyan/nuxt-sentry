@@ -27,8 +27,10 @@ export interface ModuleOptions {
   server?: {
     enable: boolean
     debug?: boolean
-    detabase?: {
-      autoDiscover?: boolean
+    tracesSampleRate?: number
+    traceTargetPath?: string[]
+    autoDiscover?: {
+      enable: boolean
     }
   }
   sourceMap?: {
@@ -69,8 +71,10 @@ export default defineNuxtModule<ModuleOptions>({
     server: {
       enable: true,
       debug: false,
-      detabase: {
-        autoDiscover: false,
+      traceTargetPath: ['/api/'],
+      tracesSampleRate: 1.0,
+      autoDiscover: {
+        enable: true,
       },
     },
     sourceMap: {
@@ -147,7 +151,7 @@ export default defineNuxtModule<ModuleOptions>({
       if (modOption.client?.enable)
         _nuxt.options.sourcemap.client = true
       if (modOption.server?.enable)
-        _nuxt.options.sourcemap.client = true
+        _nuxt.options.sourcemap.server = true
 
       // Install plugin
       addVitePlugin(() => sentryVitePlugin({
@@ -172,7 +176,7 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     // Setup for server
-    if (modOption.client?.enable) {
+    if (modOption.server?.enable) {
       // Install Plugin
       addServerPlugin(resolver.resolve('./runtime/sentry.server'))
     }

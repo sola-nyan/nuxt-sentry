@@ -1,12 +1,16 @@
 export default defineNuxtConfig({
   modules: ['../src/module'],
-  ssr: true,
+  ssr: false,
   sentry: {
     client: {
-      enable: true,
+      enable: false,
     },
     server: {
       enable: true,
+      debug: true,
+      autoDiscover: {
+        enable: false,
+      },
     },
   },
   devtools: { enabled: true },

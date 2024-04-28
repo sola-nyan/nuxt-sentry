@@ -1,7 +1,6 @@
 # @sola-nyan/nuxt-sentry
 
 Experimental repository.
-DONT USE FOR PUBLIC APPLICATION (Security issues will be fixed in the future)
 
 ## Features
 
@@ -48,8 +47,9 @@ export default defineNuxtConfig({
     server: { // about @sentry/node
       enable: true,                                     // Set false, Server side Sentry dont start.
       debug: false,                                     // Sentry debug mode.
-      detabase: {               
-        autoDiscover: false,                            // See Sentry Doc for detail.
+      tracesSampleRate: 1.0                             // See Sentry Doc for detail.
+      autoDiscover: { // about Sentry.autoDiscoverNodePerformanceMonitoringIntegrations()     
+        enable : true,                                  // See Sentry Doc for detail.
       },      
     },
     sourceMap: { // about @sentry/vite-plugin

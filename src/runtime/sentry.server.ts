@@ -22,6 +22,7 @@ export default defineNitroPlugin((nitroApp) => {
   const sentryConfig: SentryConfig = {
     dsn: modOption.dsn,
     debug: modOption.server?.debug,
+    release: modOption.release,
   }
 
   // Config - nodeProfilingIntegration

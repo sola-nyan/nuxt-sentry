@@ -8,6 +8,7 @@ const logger = useLogger(`module:${MODULE_NAME}`)
 // Module options TypeScript interface definition
 export interface ModuleOptions {
   dsn?: string
+  release?: string
   ignoreH3statusCode?: number[]
   client?: {
     enable: boolean
@@ -51,6 +52,7 @@ export default defineNuxtModule<ModuleOptions>({
   // Default configuration options of the Nuxt module
   defaults: {
     dsn: '',
+    release: '',
     ignoreH3statusCode: [404, 202],
     client: {
       enable: true,
@@ -97,6 +99,18 @@ export default defineNuxtModule<ModuleOptions>({
       }
       else {
         logger.warn('Nuxt Sentry DSN(sentry.dsn) is not set, module disabled.')
+        return
+      }
+    }
+
+    // Release name Setting Assert
+    if (!modOption.release) {
+      // Try to get from process.ENV.SENTRY_RELEASE
+      if (process.env.SENTRY_RELEASE) {
+        modOption.release = process.env.SENTRY_RELEASE
+      }
+      else {
+        logger.warn('Nuxt Sentry Release Name(sentry.release) is not set, module disabled.')
         return
       }
     }

@@ -17,6 +17,7 @@ export default defineNuxtPlugin({
       app: _nuxtApp.vueApp,
       dsn: modOption.dsn,
       debug: modOption?.server?.debug,
+      release: modOption.release,
     }
 
     // Router instance

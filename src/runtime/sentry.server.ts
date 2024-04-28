@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/node'
 import { H3Error } from 'h3'
 import type { NitroApp } from 'nitropack/runtime/app'
 // import { nodeProfilingIntegration } from '@sentry/profiling-node' // Due to Vite can not resolve .node file
+import { PrismaClient } from '@prisma/client'
 import type { ModuleOptions } from '../module'
 import { useRuntimeConfig } from '#imports'
 
@@ -13,28 +14,31 @@ function defineNitroPlugin(def: NitroAppPlugin): NitroAppPlugin {
 
 type SentryConfig = Parameters<typeof Sentry.init>[0]
 
-export default defineNitroPlugin((nitroApp) => {
+export default defineNitroPlugin(async (nitroApp) => {
   // Module option
   const modOption = useRuntimeConfig().public.sentry as ModuleOptions
 
   // Create Sentry Init Config
-  const sentryIntegrations: never[] = []
+  const sentryIntegrations
+    = modOption.server?.detabase.autoDiscover
+      ? Sentry.autoDiscoverNodePerformanceMonitoringIntegrations()
+      : []
   const sentryConfig: SentryConfig = {
     dsn: modOption.dsn,
     debug: modOption.server?.debug,
     release: modOption.release,
   }
 
-  // Config - nodeProfilingIntegration
-  // const npiOpt = modOption.server?.nodeProfilingIntegration
-  // if (npiOpt?.enable) {
-  //   sentryIntegrations.push(nodeProfilingIntegration())
-  //   const cfg: SentryConfig = {
-  //     tracesSampleRate: npiOpt.tracesSampleRate,
-  //     profilesSampleRate: npiOpt.profilesSampleRate,
-  //   }
-  //   Object.assign(sentryConfig, cfg)
-  // }
+  // Config - Sentry.autoDiscoverNodePerformanceMonitoringIntegrations()
+  const dbOpt = modOption.server?.detabase
+  if (dbOpt?.prisma) {
+    const client = new PrismaClient()
+    sentryIntegrations.push(new Sentry.Integrations.Prisma(client))
+    // Provide $sentryOptInPrisma
+    nitroApp.hooks.hook('request', (event) => {
+      event.context.$sentryOptInPrisma = client
+    })
+  }
 
   // Init Server Sentry
   const cfg: SentryConfig = { integrations: sentryIntegrations }

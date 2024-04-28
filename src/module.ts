@@ -27,11 +27,10 @@ export interface ModuleOptions {
   server?: {
     enable: boolean
     debug?: boolean
-    // nodeProfilingIntegration?: {
-    //   enable: boolean
-    //   tracesSampleRate?: number
-    //   profilesSampleRate?: number
-    // }
+    detabase: {
+      autoDiscover: boolean
+      prisma: boolean
+    }
   }
   sourceMap?: {
     enable: boolean
@@ -71,11 +70,10 @@ export default defineNuxtModule<ModuleOptions>({
     server: {
       enable: true,
       debug: false,
-      // nodeProfilingIntegration: {
-      //   enable: true,
-      //   tracesSampleRate: 1.0,
-      //   profilesSampleRate: 0.1,
-      // },
+      detabase: {
+        autoDiscover: false,
+        prisma: false,
+      },
     },
     sourceMap: {
       enable: true,

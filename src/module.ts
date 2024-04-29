@@ -9,6 +9,7 @@ const logger = useLogger(`module:${MODULE_NAME}`)
 export interface ModuleOptions {
   dsn?: string
   release?: string
+  project?: string
   ignoreH3statusCode?: number[]
   client?: {
     enable: boolean
@@ -29,7 +30,10 @@ export interface ModuleOptions {
     debug?: boolean
     tracesSampleRate?: number
     traceTargetPath?: string[]
-    autoDiscover?: {
+    autoDiscoverIntegration?: {
+      enable: boolean
+    }
+    customInst?: {
       enable: boolean
     }
   }
@@ -51,8 +55,6 @@ export default defineNuxtModule<ModuleOptions>({
   },
   // Default configuration options of the Nuxt module
   defaults: {
-    dsn: '',
-    release: '',
     ignoreH3statusCode: [404, 202],
     client: {
       enable: true,
@@ -73,8 +75,11 @@ export default defineNuxtModule<ModuleOptions>({
       debug: false,
       traceTargetPath: ['/api/'],
       tracesSampleRate: 1.0,
-      autoDiscover: {
-        enable: true,
+      autoDiscoverIntegration: {
+        enable: false,
+      },
+      customInst: {
+        enable: false,
       },
     },
     sourceMap: {
@@ -87,20 +92,30 @@ export default defineNuxtModule<ModuleOptions>({
   setup(modOption, _nuxt) {
     // Nuxt version check
     if (!isNuxt3()) {
-      logger.warn('This module suppurts only Nuxt3, module disabled.')
+      logger.warn('[Sentry module is disabled] This module suppurts only Nuxt3')
       return
     }
 
-    // DSN Setting Assert
+    // Try to get from process.ENV.SENTRY_DSN
+    if (process.env.SENTRY_DSN) {
+      modOption.dsn = process.env.SENTRY_DSN
+    }
+
+    // Try to get from process.ENV.SENTRY_PROJECT
+    if (process.env.SENTRY_PROJECT) {
+      modOption.project = process.env.SENTRY_PROJECT
+    }
+
+    // DNS Setting Assert
     if (!modOption.dsn) {
-      // Try to get from process.ENV.SENTRY_DSN
-      if (process.env.SENTRY_DSN) {
-        modOption.dsn = process.env.SENTRY_DSN
-      }
-      else {
-        logger.warn('Nuxt Sentry DSN(sentry.dsn) is not set, module disabled.')
-        return
-      }
+      logger.warn('[Sentry module is disabled] Not found Environment value, SENTRY_DNS')
+      return
+    }
+
+    // Project Setting Assert
+    if (!modOption.project) {
+      logger.warn('[Sentry module is disabled] Not found Environment value, SENTRY_PROJECT')
+      return
     }
 
     // Release name Setting Assert
@@ -110,7 +125,7 @@ export default defineNuxtModule<ModuleOptions>({
         modOption.release = process.env.SENTRY_RELEASE
       }
       else {
-        logger.warn('Nuxt Sentry Release Name(sentry.release) is not set, module disabled.')
+        logger.warn('[Sentry module is disabled] Not found Environment value of SENTRY_RELEASE')
         return
       }
     }
@@ -119,19 +134,13 @@ export default defineNuxtModule<ModuleOptions>({
     if (modOption.sourceMap?.enable) {
       // SENTRY AUTH TOKEN assert
       if (!process.env.SENTRY_AUTH_TOKEN) {
-        logger.warn('Environment value of SENTRY_AUTH_TOKEN is not set, module disabled.')
+        logger.warn('[Sentry module is disabled] Not found Environment value of SENTRY_AUTH_TOKEN')
         return
       }
 
       // Org. name
       if (!process.env.SENTRY_ORG) {
-        logger.warn('Environment value of SENTRY_ORG is not set, module disabled.')
-        return
-      }
-
-      // Project name
-      if (!process.env.SENTRY_PROJECT) {
-        logger.warn('Environment value of SENTRY_PROJECT is not set, module disabled.')
+        logger.warn('[Sentry module is disabled] Not found Environment value of SENTRY_ORG')
         return
       }
     }
@@ -145,19 +154,17 @@ export default defineNuxtModule<ModuleOptions>({
 
     // Add sourcemap upload plugin with Vite
     if (modOption.sourceMap?.enable) {
-      // Vite reconfig
-
       // Force generate client sourcemap
-      if (modOption.client?.enable)
+      if (modOption.server?.enable)
         _nuxt.options.sourcemap.client = true
+      // Force generate server sourcemap
       if (modOption.server?.enable)
         _nuxt.options.sourcemap.server = true
-
-      // Install plugin
+      // Install Plugin
       addVitePlugin(() => sentryVitePlugin({
         authToken: process.env.SENTRY_AUTH_TOKEN,
         org: process.env.SENTRY_ORG,
-        project: process.env.SENTRY_PROJECT,
+        project: modOption.project,
         telemetry: !modOption.sourceMap?.telemetryOmit,
         debug: modOption.sourceMap?.debug,
         sourcemaps: {

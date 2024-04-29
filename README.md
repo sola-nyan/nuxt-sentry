@@ -48,9 +48,12 @@ export default defineNuxtConfig({
       enable: true,                                     // Set false, Server side Sentry dont start.
       debug: false,                                     // Sentry debug mode.
       tracesSampleRate: 1.0                             // See Sentry Doc for detail.
-      autoDiscover: { // about Sentry.autoDiscoverNodePerformanceMonitoringIntegrations()     
-        enable : true,                                  // See Sentry Doc for detail.
-      },      
+      autoDiscoverIntegration: { // about Sentry.autoDiscoverNodePerformanceMonitoringIntegrations()     
+        enable: false,                                  // See Sentry Doc for detail.
+      },
+      customInst: {
+        enable: false,                                  // Module Custom Instrumentation, See sentry.server.ts for detail.
+      }
     },
     sourceMap: { // about @sentry/vite-plugin
       enable: true,                                     // Set false, need to upload sourcemap your self. 

@@ -8,8 +8,11 @@ export default defineNuxtConfig({
     server: {
       enable: true,
       debug: true,
-      autoDiscover: {
+      autoDiscoverIntegration: {
         enable: false,
+      },
+      customInst: {
+        enable: true,
       },
     },
   },

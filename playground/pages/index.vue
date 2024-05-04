@@ -11,7 +11,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+await $fetch('/api/')
+
 function handler() {
   console.log('press')
   throw createError({

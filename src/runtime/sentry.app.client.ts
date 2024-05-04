@@ -16,7 +16,7 @@ export default defineNuxtPlugin({
     const sentryConfig: SentryConfig = {
       app: _nuxtApp.vueApp,
       dsn: modOption.dsn,
-      debug: modOption?.server?.debug,
+      debug: modOption?.client?.debug,
       release: modOption.release,
     }
 

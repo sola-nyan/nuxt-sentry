@@ -4,12 +4,13 @@ export default defineNuxtConfig({
   sentry: {
     client: {
       enable: false,
+      debug: true,
     },
     server: {
       enable: true,
       debug: true,
       autoDiscoverIntegration: {
-        enable: false,
+        enable: true,
       },
       customInst: {
         enable: true,

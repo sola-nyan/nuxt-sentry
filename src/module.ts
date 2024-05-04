@@ -108,7 +108,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     // DNS Setting Assert
     if (!modOption.dsn) {
-      logger.warn('[Sentry module is disabled] Not found Environment value, SENTRY_DNS')
+      logger.warn('[Sentry module is disabled] Not found Environment value, SENTRY_DSN')
       return
     }
 
@@ -177,7 +177,7 @@ export default defineNuxtModule<ModuleOptions>({
     if (modOption.client?.enable) {
       // Install Plugin
       addPlugin({
-        src: resolver.resolve('./runtime/sentry.client'),
+        src: resolver.resolve('./runtime/sentry.app.client'),
         mode: 'client',
       })
     }
@@ -185,7 +185,7 @@ export default defineNuxtModule<ModuleOptions>({
     // Setup for server
     if (modOption.server?.enable) {
       // Install Plugin
-      addServerPlugin(resolver.resolve('./runtime/sentry.server'))
+      addServerPlugin(resolver.resolve('./runtime/sentry.nitro'))
     }
   },
 })

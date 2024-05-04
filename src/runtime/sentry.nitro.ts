@@ -1,4 +1,6 @@
 import * as Sentry from '@sentry/node'
+import { spanToTraceHeader, getDynamicSamplingContextFromSpan } from '@sentry/core'
+import { dynamicSamplingContextToSentryBaggageHeader } from '@sentry/utils'
 import * as h3 from 'h3'
 import type { NitroApp } from 'nitropack/runtime/app'
 import type { ModuleOptions } from '../module'
@@ -77,7 +79,6 @@ export default defineNitroPlugin(async (nitroApp) => {
       scope.setUser({
         ip_address: ip,
       })
-
       if (modOption.server?.traceTargetPath?.find(r => event.path.startsWith(r))) {
         const url = h3.getRequestURL(event)
         Sentry.startSpanManual({
@@ -90,11 +91,24 @@ export default defineNitroPlugin(async (nitroApp) => {
         }, (span, finish) => {
           if (span) {
             event.context.$sentryRequestSpan = { span, finish }
+            const dsc = getDynamicSamplingContextFromSpan(span)
+            if (dsc) {
+              event.headers.append('sentry-trace', spanToTraceHeader(span))
+              const bag = dynamicSamplingContextToSentryBaggageHeader(dsc)
+              if (bag) event.headers.append('baggage', bag)
+            }
           }
         })
       }
     }
   })
+
+  // nitroApp.hooks.hook('render:html', async (html, { event }) => {
+  //   if (EnableCustomInst) {
+  //     html.head.push(`<meta name='sentry-trace' content='${event.headers.get('sentry-trace')}'>`)
+  //     html.head.push(`<meta name='baggage' content='${event.headers.get('baggage')}'>`)
+  //   }
+  // })
 
   // Response After Hook: Finish Span
   nitroApp.hooks.hook('afterResponse', (event) => {

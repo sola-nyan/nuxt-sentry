@@ -4,7 +4,7 @@
   "description": "Nuxt module for easy integration sentry",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sola-nyan/nuxt-sentry"
+    "url": "git+https://github.com/sola-nyan/nuxt-sentry.git"
   },
   "license": "MIT",
   "type": "module",

@@ -1,5 +1,5 @@
 {
-  "name": "@solanyan/nuxt-sentry",
+  "name": "@sola-nyan/nuxt-sentry",
   "version": "0.0.12",
   "description": "Nuxt module for easy integration sentry",
   "repository": {

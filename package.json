@@ -1,6 +1,6 @@
 {
   "name": "@solanyan/nuxt-sentry",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Nuxt module for easy integration sentry",
   "repository": {
     "type": "git",

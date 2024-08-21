@@ -103,8 +103,6 @@ export default defineNitroPlugin(async (nitroApp) => {
     }
   })
 
-
-
   // nitroApp.hooks.hook('render:html', async (html, { event }) => {
   //   if (EnableCustomInst) {
   //     html.head.push(`<meta name='sentry-trace' content='${event.headers.get('sentry-trace')}'>`)

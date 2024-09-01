@@ -1,6 +1,6 @@
 # @sola-nyan/nuxt-sentry
 
-**!!Important!! This module is deprecated **
+**!!Important!! This module is deprecated **  
 ** Use Sentry SDK Directly : https://docs.sentry.io/platforms/javascript/guides/nuxt/ **
 
 ## Features
